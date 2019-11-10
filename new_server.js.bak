@@ -2,7 +2,7 @@ var fs = require("fs");
 var dateFormat = require('dateformat');
 var express = require("express"),
 	app = express(),
-	http = require("http").Server(app).listen(2019),
+	http = require("http").Server(app).listen(8080),
 	upload = require("express-fileupload");
 app.use(upload());
 console.log("Server Started!");

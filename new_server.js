@@ -1,8 +1,12 @@
 var fs = require("fs");
 var dateFormat = require('dateformat');
+let port = process.env.PORT;
+if (port == null || port == "") {
+  port = 2019;
+}
 var express = require("express"),
 	app = express(),
-	http = require("http").Server(app).listen(8080),
+	http = require("http").Server(app).listen(port),
 	upload = require("express-fileupload");
 app.use(upload());
 console.log("Server Started!");
