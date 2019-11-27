@@ -88,7 +88,7 @@ app.get("/getAllReports/:userid",function(req,res){
 	}
 });
 
-app.get("/getReportImage/:reportid",function(req,res){
+app.get("/getReportImage/:reportid/:userid",function(req,res){
 	
 	const reportid = req.params.reportid;
 	if(validateAccess(req)){
