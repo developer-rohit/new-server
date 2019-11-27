@@ -1,8 +1,12 @@
 var fs = require("fs");
 var dateFormat = require('dateformat');
+let port = process.env.PORT;
+if (port == null || port == "") {
+  port = 2019;
+}
 var express = require("express"),
 	app = express(),
-	http = require("http").Server(app).listen(8080),
+	http = require("http").Server(app).listen(port),
 	upload = require("express-fileupload");
 app.use(upload());
 console.log("Server Started!");
@@ -84,20 +88,22 @@ app.get("/getAllReports/:userid",function(req,res){
 	}
 });
 
-
-function getAllReportsOfUser(userid,res,callback){
-	mongodb.connect(url,{useUnifiedTopology: true , useNewUrlParser: true}, function(err, client) {
-		if (err) return callback(err);
-		console.log("Connected successfully to db server");
-		const db = client.db(dbName);
-		const report_collection = db.collection('report_collection');
-		report_collection.find({userid: userid}).toArray(function(err, docs) {
-			if (err) throw err;
-			client.close();
-			res.send(docs); // <-- TODO
+app.get("/getReportImage/:reportid",function(req,res){
+	
+	const reportid = req.params.reportid;
+	if(validateAccess(req)){
+		getReportImage(reportid,res,function(err){
+			if(err){
+				console.log("1111")
+				res.send("Error");
+			}
+			
 		});
-	});
-}
+	}
+	else{
+		res.send("Logout");
+	}
+});
 
 app.post("/uploadreport/:userid", function(req,res){
 	console.log(req.headers["content-type"]);
@@ -185,6 +191,34 @@ function uploadReport(userid,post_data,callback){
 				client.close();
 				return callback(err,reportid);
 			}
+		});
+	});
+}
+
+function getAllReportsOfUser(userid,res,callback){
+	mongodb.connect(url,{useUnifiedTopology: true , useNewUrlParser: true}, function(err, client) {
+		if (err) return callback(err);
+		console.log("Connected successfully to db server");
+		const db = client.db(dbName);
+		const report_collection = db.collection('report_collection');
+		report_collection.find({userid: userid}, { projection: { mainImagePath: 0, infectedImagePath: 0, stoolImagePath: 0 } }).toArray(function(err, docs) {
+			if (err) throw err;
+			client.close();
+			res.send(docs); // <-- TODO
+		});
+	});
+}
+
+function getReportImage(reportid,res,callback){
+	mongodb.connect(url,{useUnifiedTopology: true , useNewUrlParser: true}, function(err, client) {
+		if (err) return callback(err);
+		console.log("Connected successfully to db server");
+		const db = client.db(dbName);
+		const report_collection = db.collection('report_collection');
+		report_collection.find({reportId: reportid}, { projection: { mainImagePath: 1, infectedImagePath: 1, stoolImagePath: 1 } }).toArray(function(err, docs) {
+			if (err) throw err;
+			client.close();
+			res.send(docs); // <-- TODO
 		});
 	});
 }
