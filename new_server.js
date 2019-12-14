@@ -177,6 +177,22 @@ app.get("/getReportImage/:reportid/:userid",function(req,res){
 	else{
 		res.send("Logout");
 	}
+	
+});
+
+
+
+app.get("/getReportImage/:reportid/",function(req,res){
+	
+	const reportid = req.params.reportid;
+	getReportImage(reportid,res,function(err){
+		if(err){
+			console.log("1111");
+			res.send("Error");
+		}
+		
+	});
+	
 });
 
 app.post("/uploadreport/:userid", function(req,res){

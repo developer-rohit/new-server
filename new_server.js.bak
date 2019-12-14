@@ -162,21 +162,17 @@ app.get("/unassignReports/:doctorid",function(req,res){
 
 
 
-app.get("/getReportImage/:reportid/:userid",function(req,res){
+app.get("/getReportImage/:reportid/",function(req,res){
 	
 	const reportid = req.params.reportid;
-	if(validateAccess(req)){
-		getReportImage(reportid,res,function(err){
-			if(err){
-				console.log("1111");
-				res.send("Error");
-			}
-			
-		});
-	}
-	else{
-		res.send("Logout");
-	}
+	getReportImage(reportid,res,function(err){
+		if(err){
+			console.log("1111");
+			res.send("Error");
+		}
+		
+	});
+	
 });
 
 app.post("/uploadreport/:userid", function(req,res){
@@ -358,7 +354,7 @@ function unassignAllReportsOfDoctor(doctorid,res,callback){
 		console.log("Connected successfully to db server");
 		const db = client.db(dbName);
 		const report_collection = db.collection('report_collection');
-		var myquery = { doctorId: doctorid };
+		var myquery = { assignedDoctorId: doctorid };
 		var newvalues = { $set: {assignedDoctorId: ""} };
 		report_collection.updateMany(myquery, newvalues, function(err, result) {
 			if (err) return callback(err);
