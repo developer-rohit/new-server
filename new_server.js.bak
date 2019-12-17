@@ -9,7 +9,7 @@ var express = require("express"),
 	http = require("http").Server(app).listen(port),
 	upload = require("express-fileupload");
 app.use(upload());
-console.log("Server Started!");
+console.log("Server Started! At port "+port);
 var query_string = require('querystring');
 
 const mongodb = require('mongodb').MongoClient;
@@ -162,6 +162,26 @@ app.get("/unassignReports/:doctorid",function(req,res){
 
 
 
+app.get("/getReportImage/:reportid/:userid",function(req,res){
+	
+	const reportid = req.params.reportid;
+	if(validateAccess(req)){
+		getReportImage(reportid,res,function(err){
+			if(err){
+				console.log("1111");
+				res.send("Error");
+			}
+			
+		});
+	}
+	else{
+		res.send("Logout");
+	}
+	
+});
+
+
+
 app.get("/getReportImage/:reportid/",function(req,res){
 	
 	const reportid = req.params.reportid;
@@ -198,6 +218,33 @@ app.post("/uploadreport/:userid", function(req,res){
 		uploadReport(userid,post_data,function(err, client) {
 			assert.equal(err, null);
 			res.send("success");
+		});
+	});
+});
+
+
+app.post("/doctor/submitdiagnosisreport/:reportId", function(req,res){
+	console.log(req.headers["content-type"]);
+	var reportId = req.params.reportId;
+	var req_body = '';
+	req.on('data', function (data) {
+		req_body += data;
+		if (req_body.length > 1e8){
+			req.connection.destroy();
+			res.send("LargePostData");
+		}
+	});
+
+	req.on('end', function () {
+		var post_data = query_string.parse(req_body);
+		
+		submitDoctorReport(reportId,post_data,function(err, client) {
+			if(err){
+				res.send("Error");
+				console.log(err);
+			}
+			else
+				res.send("success");
 		});
 	});
 });
@@ -306,10 +353,33 @@ function uploadReport(userid,post_data,callback){
 	});
 }
 
+function submitDoctorReport(reportId,post_data,callback){
+	var reportDate=dateFormat(new Date(), "mm-dd-yyyy");
+	var diseaseName = post_data["diseaseName"];
+	var medicineRecommended = post_data["medicineRecommended"];
+	var doctorAdvice = post_data["doctorAdvice"];
+	var doctorId = post_data["doctorId"];
+	
+	mongodb.connect(url,{useUnifiedTopology: true , useNewUrlParser: true}, function(err, client) {
+		if(err) return callback(err);
+		const db = client.db(dbName);
+		const reports_collection = db.collection('report_collection');
+		var myobj = {};
+		var myquery = {reportId : reportId};
+		myobj = { $set: {diseaseName : diseaseName,medicineRecommended : medicineRecommended,doctorSuggestion : doctorAdvice,
+		teatedByDcotorId : doctorId,assignedDoctorId : "",status : "GENERATED"} };
+	
+		
+		reports_collection.updateOne(myquery,myobj,function(err){
+			if(err) return callback(err);
+			client.close();
+		});
+	});
+}
+
 function getAllReportsOfUser(userid,res,callback){
 	mongodb.connect(url,{useUnifiedTopology: true , useNewUrlParser: true}, function(err, client) {
 		if (err) return callback(err);
-		console.log("Connected successfully to db server");
 		const db = client.db(dbName);
 		const report_collection = db.collection('report_collection');
 		report_collection.find({userid: userid}, { projection: { mainImagePath: 0, infectedImagePath: 0, stoolImagePath: 0 } }).toArray(function(err, docs) {
