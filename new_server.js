@@ -92,7 +92,7 @@ app.post("/doctor/auth", function(req,res){
 // handle logout
 app.get("/logout/:userid", function(req,res){
 	var userid = req.params.userid;
-	console.log(userid);
+	//console.log(userid);
 	if(activeUsers.indexOf(userid)< 0)
 		res.send("Success");
 	else{
@@ -117,7 +117,7 @@ app.get("/getAllReports/:userid",function(req,res){
 	if(validateAccess(req)){
 		getAllReportsOfUser(userid,res,function(err){
 			if(err){
-				console.log("1111")
+				//console.log("1111")
 				res.send("Error");
 			}
 			
@@ -168,7 +168,7 @@ app.get("/getReportImage/:reportid/:userid",function(req,res){
 	if(validateAccess(req)){
 		getReportImage(reportid,res,function(err){
 			if(err){
-				console.log("1111");
+				//console.log("1111");
 				res.send("Error");
 			}
 			
@@ -187,7 +187,7 @@ app.get("/getReportImage/:reportid/",function(req,res){
 	const reportid = req.params.reportid;
 	getReportImage(reportid,res,function(err){
 		if(err){
-			console.log("1111");
+			//console.log("1111");
 			res.send("Error");
 		}
 		
@@ -196,7 +196,7 @@ app.get("/getReportImage/:reportid/",function(req,res){
 });
 
 app.post("/uploadreport/:userid", function(req,res){
-	console.log(req.headers["content-type"]);
+	//console.log(req.headers["content-type"]);
 	var userid = req.params.userid;
 	var req_body = '';
 	req.on('data', function (data) {
@@ -224,7 +224,7 @@ app.post("/uploadreport/:userid", function(req,res){
 
 
 app.post("/doctor/submitdiagnosisreport/:reportId", function(req,res){
-	console.log(req.headers["content-type"]);
+	//console.log(req.headers["content-type"]);
 	var reportId = req.params.reportId;
 	var req_body = '';
 	req.on('data', function (data) {
@@ -241,7 +241,7 @@ app.post("/doctor/submitdiagnosisreport/:reportId", function(req,res){
 		submitDoctorReport(reportId,post_data,function(err, client) {
 			if(err){
 				res.send("Error");
-				console.log(err);
+				//console.log(err);
 			}
 			else
 				res.send("success");
@@ -279,12 +279,12 @@ app.get("/lockReport/:reprotid/:lock", function(req,res){
 // API's 
 
 function authenticateUser(userid,pass,res){
-	console.log(userid+" and "+pass);
+	//console.log(userid+" and "+pass);
 	
 	// Use connect method to connect to the server
 	mongodb.connect(url,{useUnifiedTopology: true , useNewUrlParser: true}, function(err, client) {
 		assert.equal(null, err);
-		//console.log("Connected successfully to db server");
+		////console.log("Connected successfully to db server");
 		const db = client.db(dbName);
 		const collection = db.collection(userCollection);
 		collection.find({userid: userid, password: pass}).toArray(function(err, docs) {
@@ -304,12 +304,12 @@ function authenticateUser(userid,pass,res){
 
 
 function authenticateDoctor(doctorid,pass,res){
-	console.log(doctorid+" and "+pass);
+	//console.log(doctorid+" and "+pass);
 	
 	// Use connect method to connect to the server
 	mongodb.connect(url,{useUnifiedTopology: true , useNewUrlParser: true}, function(err, client) {
 		assert.equal(null, err);
-		//console.log("Connected successfully to db server");
+		////console.log("Connected successfully to db server");
 		const db = client.db(dbName);
 		const collection = db.collection(doctorCollection);
 		collection.find({doctorId: doctorid, password: pass}).toArray(function(err, docs) {
@@ -322,7 +322,7 @@ function authenticateDoctor(doctorid,pass,res){
 					assert.equal(err, null);
 					client.close();
 					res.send(docs[0]);
-					console.log(" Collection updated ");
+					//console.log(" Collection updated ");
 					
 				});
 			}
@@ -345,7 +345,7 @@ function uploadReport(userid,post_data,callback){
 	var reportDate=dateFormat(new Date(), "mm-dd-yyyy");
 	mongodb.connect(url,{useUnifiedTopology: true , useNewUrlParser: true}, function(err, client) {
 		if(err) return callback(err);
-		console.log("Connected successfully to db server");
+		//console.log("Connected successfully to db server");
 		const db = client.db(dbName);
 		const reports_collection = db.collection('report_collection');
 		generateReportSequence(userid,db,function(err,reprotid){
@@ -425,7 +425,7 @@ function getAllReportsOfDoctor(doctorid,res,callback){
 function getAllAssignedReportsOfDoctor(doctorid,res,callback){
 	mongodb.connect(url,{useUnifiedTopology: true , useNewUrlParser: true}, function(err, client) {
 		if (err) return callback(err);
-		console.log("Connected successfully to db server");
+		//console.log("Connected successfully to db server");
 		const db = client.db(dbName);
 		const report_collection = db.collection('report_collection');
 		report_collection.find({assignedDoctorId: doctorid}, { projection: { mainImagePath: 0, infectedImagePath: 0, stoolImagePath: 0 } }).toArray(function(err, docs) {
@@ -439,7 +439,7 @@ function getAllAssignedReportsOfDoctor(doctorid,res,callback){
 function unassignAllReportsOfDoctor(doctorid,res,callback){
 	mongodb.connect(url,{useUnifiedTopology: true , useNewUrlParser: true}, function(err, client) {
 		if (err) return callback(err);
-		console.log("Connected successfully to db server");
+		//console.log("Connected successfully to db server");
 		const db = client.db(dbName);
 		const report_collection = db.collection('report_collection');
 		const doctor_collection = db.collection('report_collection');
@@ -464,7 +464,7 @@ function unassignAllReportsOfDoctor(doctorid,res,callback){
 function getReportImage(reportid,res,callback){
 	mongodb.connect(url,{useUnifiedTopology: true , useNewUrlParser: true}, function(err, client) {
 		if (err) return callback(err);
-		console.log("Connected successfully to db server");
+		//console.log("Connected successfully to db server");
 		const db = client.db(dbName);
 		const report_collection = db.collection('report_collection');
 		report_collection.find({reportId: reportid}, { projection: { mainImagePath: 1, infectedImagePath: 1, stoolImagePath: 1 } }).toArray(function(err, docs) {
@@ -492,13 +492,13 @@ function validateDoctors(req,res,callback){
 	
 	mongodb.connect(url,{useUnifiedTopology: true , useNewUrlParser: true}, function(err, client) {
 		if (err) return callback(err);
-		console.log("Connected successfully to db server");
+		//console.log("Connected successfully to db server");
 		const db = client.db(dbName);
 		const doctor_collection = db.collection(doctorCollection);
 		doctor_collection.find({doctorId: doctorid}, { projection: { loginStatus: 1 } }).toArray(function(err, docs) {
 			if (err) return callback(err);
 			client.close();
-			console.log(docs[0]['loginStatus']);
+			//console.log(docs[0]['loginStatus']);
 			if(res != null)
 				res.send(docs[0]['loginStatus']); // <-- TODO
 		});
@@ -509,7 +509,7 @@ function validateDoctors(req,res,callback){
 function doctorLogoutFromServer(res,doctorid,callback){
 	mongodb.connect(url,{useUnifiedTopology: true , useNewUrlParser: true}, function(err, client) {
 		if (err) return callback(err);
-		console.log("Connected successfully to db server");
+		//console.log("Connected successfully to db server");
 		const db = client.db(dbName);
 		const doctors_collection = db.collection(doctorCollection);
 		var myquery = { doctorId: doctorid };
@@ -548,7 +548,7 @@ function generateReportSequence(userid,db,callback){
 			myobj = {user_id : userid , seq :  1};
 			seq_collection.insertOne(myobj,function(err) {
 				if(err) return callback(err);
-				console.log("New sequence inserted.");
+				//console.log("New sequence inserted.");
 				return callback(err,reportid);
 			});
 		}
@@ -561,7 +561,7 @@ function generateReportSequence(userid,db,callback){
 			var newvalues = { $set: {seq: seq} };
 			seq_collection.updateOne(myquery, newvalues, function(err, result) {
 				if (err) return callback(err);
-				console.log("Sequence updated.");
+				//console.log("Sequence updated.");
 				return callback(err,reportid);
 			});
 		}
