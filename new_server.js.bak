@@ -259,6 +259,21 @@ app.get("/validatedoctor/:doctorid", function(req,res){
 });
 
 
+// handle lock Report
+app.get("/lockReport/:reprotid/:lock", function(req,res){
+	var reprotid = req.params.reprotid;
+	var lock = req.params.lock;
+	lockReport(reprotid,lock,function(err){
+		if(err){
+			res.send("Error");
+		}else{
+			res.send(sucessMessageKey);
+		}
+	});
+});
+
+
+
 
 
 // API's 
@@ -364,15 +379,18 @@ function submitDoctorReport(reportId,post_data,callback){
 		if(err) return callback(err);
 		const db = client.db(dbName);
 		const reports_collection = db.collection('report_collection');
+		const doctor_collection = db.collection(doctorCollection);
+		const doctors = db.collection(doctorCollection);
 		var myobj = {};
 		var myquery = {reportId : reportId};
 		myobj = { $set: {diseaseName : diseaseName,medicineRecommended : medicineRecommended,doctorSuggestion : doctorAdvice,
-		teatedByDcotorId : doctorId,assignedDoctorId : "",status : "GENERATED"} };
-	
-		
+		teatedByDcotorId : doctorId,isAssigned : "false",assignedDoctorId : "",status : "GENERATED"} };
 		reports_collection.updateOne(myquery,myobj,function(err){
 			if(err) return callback(err);
-			client.close();
+			doctor_collection.updateOne({doctorId:doctorId},{"$inc" : {assignedReports: -1}},function(err,result){
+				if (err) return callback(err);
+				client.close();
+			});
 		});
 	});
 }
@@ -393,7 +411,6 @@ function getAllReportsOfUser(userid,res,callback){
 function getAllReportsOfDoctor(doctorid,res,callback){
 	mongodb.connect(url,{useUnifiedTopology: true , useNewUrlParser: true}, function(err, client) {
 		if (err) return callback(err);
-		console.log("Connected successfully to db server");
 		const db = client.db(dbName);
 		const report_collection = db.collection('report_collection');
 		report_collection.find({teatedByDcotorId: doctorid}, { projection: { mainImagePath: 0, infectedImagePath: 0, stoolImagePath: 0 } }).toArray(function(err, docs) {
@@ -424,12 +441,21 @@ function unassignAllReportsOfDoctor(doctorid,res,callback){
 		console.log("Connected successfully to db server");
 		const db = client.db(dbName);
 		const report_collection = db.collection('report_collection');
+		const doctor_collection = db.collection('report_collection');
 		var myquery = { assignedDoctorId: doctorid };
-		var newvalues = { $set: {assignedDoctorId: ""} };
-		report_collection.updateMany(myquery, newvalues, function(err, result) {
+		var newvalues = { $set: {assignedDoctorId: "",isAssigned:"false"} };
+		
+		report_collection.find({assignedDoctorId: doctorid}, { projection: { reportId : 1 } }).toArray(function(err, docs) {
 			if (err) return callback(err);
-			client.close();
-			res.send(sucessMessageKey);
+			x = docs.length;
+			report_collection.updateMany(myquery, newvalues, function(err, result) {
+				if (err) return callback(err);
+				doctor_collection.updateOne({doctorId:doctorid},{"$inc" : {assignedReports: -x}},function(err,result){
+					if (err) return callback(err);
+					client.close();
+					res.send(sucessMessageKey);
+				});
+			});	
 		});
 	});
 }
@@ -494,6 +520,22 @@ function doctorLogoutFromServer(res,doctorid,callback){
 		});
 	});
 }
+
+function lockReport(reprotid,lock,callback){
+	mongodb.connect(url,{useUnifiedTopology: true , useNewUrlParser: true}, function(err, client) {
+		if (err) return callback(err);
+		const db = client.db(dbName);
+		const report_collection = db.collection('report_collection');
+		var myquery = { reprotId: reprotid };
+		var newvalues = { $set: {lock: lock} };
+		report_collection.updateOne(myquery, newvalues, function(err, result) {
+			if (err) return callback(err);
+			client.close();
+			return callback(err);
+		});
+	});
+}
+
 
 function generateReportSequence(userid,db,callback){
 	var seq_collection = db.collection('gen_sequence_report');
