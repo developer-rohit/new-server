@@ -43,8 +43,8 @@ def distributeReports():
 	currtime = datetime.now()
 	unassignReports(currtime)
 	
-	availableDoctors = doctors.find({"assignedReports": {"$lt": reportLimit},"onlineStatus": statusOnline},{"doctorId":1,"assignedReports":1});
-	availableReports = reportCollection.find({"status": statusPending,"isAssigned": "false"},{"reportId":1});
+	availableDoctors = doctors.find({"assignedReports": {"$lt": reportLimit},"onlineStatus": statusOnline},{"doctorId":1,"assignedReports":1})
+	availableReports = reportCollection.find({"status": statusPending,"isAssigned": "false"},{"reportId":1})
 	
 	
 	totalReports = availableReports.count()
@@ -74,18 +74,22 @@ def assignOneToEach(availableDoctors,availableReports,totalReports,doctorDetails
 	j=0
 	doctorCount = availableDoctors.count()
 	# iterates over reports and assign it to doctors
-	while i<totalReports:
-		report = availableReports[i];
+
+	for report in availableReports:
+		breakwhilelopp = False
+		while (not breakwhilelopp):
 		
+			if(j>= doctorCount):
+				break
+				
+			if doctorDetails[j][1] > 0:
+				assignReport(report["reportId"],doctorDetails[j][0],currtime)
+				breakwhilelopp = True
+				doctorDetails[j][1] = doctorDetails[j][1]-1
+			else:
+				j=j+1
 		if(j>= doctorCount):
-			break;
-			
-		if doctorDetails[j][1] > 0:
-			assignReport(report["reportId"],doctorDetails[j][0],currtime)
-			i=i+1
-			doctorDetails[j][1] = doctorDetails[j][1]-1
-		else:
-			j=j+1
+				break
 		
 # used when total reports is less than total vaccancy
 # 
@@ -101,18 +105,21 @@ def assignAccordingToProbablity(availableDoctors,availableReports,totalReports,d
 	i=0
 	j=0
 	# iterates over reports and assign it to doctors
-	while i<totalReports:
-		report = availableReports[i]
+	for report in availableReports:
+		breakwhilelopp = False
+		while (not breakwhilelopp):
 		
+			if(j>= doctorCount):
+				break
+				
+			if doctorDetails[j][1] > 0:
+				assignReport(report["reportId"],doctorDetails[j][0],currtime)
+				breakwhilelopp = True
+				doctorDetails[j][1] = doctorDetails[j][1]-1
+			else:
+				j=j+1
 		if(j>= doctorCount):
-			break;
-			
-		if doctorDetails[j][1] > 0:
-			assignReport(report["reportId"],doctorDetails[j][0],currtime)
-			i=i+1
-			doctorDetails[j][1] = doctorDetails[j][1]-1
-		else:
-			j=j+1
+				break
 
 # Assigns doctorId to given reportId
 def assignReport(reportId,doctorId,currtime):

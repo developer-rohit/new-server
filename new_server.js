@@ -114,18 +114,13 @@ app.get("/doctorlogout/:doctorid", function(req,res){
 app.get("/getAllReports/:userid",function(req,res){
 	
 	const userid = req.params.userid;
-	if(validateAccess(req)){
-		getAllReportsOfUser(userid,res,function(err){
-			if(err){
-				//console.log("1111")
-				res.send("Error");
-			}
-			
-		});
-	}
-	else{
-		res.send("Logout");
-	}
+	getAllReportsOfUser(userid,res,function(err){
+		if(err){
+			//console.log("1111")
+			res.send("Error");
+		}
+		
+	});
 });
 
 //get all repors of a doctor
@@ -165,19 +160,14 @@ app.get("/unassignReports/:doctorid",function(req,res){
 app.get("/getReportImage/:reportid/:userid",function(req,res){
 	
 	const reportid = req.params.reportid;
-	if(validateAccess(req)){
-		getReportImage(reportid,res,function(err){
-			if(err){
-				//console.log("1111");
-				res.send("Error");
-			}
-			
-		});
-	}
-	else{
-		res.send("Logout");
-	}
 	
+	getReportImage(reportid,res,function(err){
+		if(err){
+			//console.log("1111");
+			res.send("Error");
+		}
+		
+	});
 });
 
 
@@ -204,7 +194,7 @@ app.post("/uploadreport/:userid", function(req,res){
 
 		// If the POST data is too much then destroy the connection to avoid attack.
 		// 1e6 === 1 * Math.pow(10, 6) === 1 * 1000000 ~~~ 1MB
-		if (req_body.length > 1e8){
+		if (req_body.length > 1e7){
 			req.connection.destroy();
 			res.send("LargePostData");
 		}
@@ -216,6 +206,7 @@ app.post("/uploadreport/:userid", function(req,res){
 		var post_data = query_string.parse(req_body);
 		
 		uploadReport(userid,post_data,function(err, client) {
+			//console.log(err);
 			assert.equal(err, null);
 			res.send("success");
 		});
@@ -284,11 +275,12 @@ function authenticateUser(userid,pass,res){
 	// Use connect method to connect to the server
 	mongodb.connect(url,{useUnifiedTopology: true , useNewUrlParser: true}, function(err, client) {
 		assert.equal(null, err);
-		////console.log("Connected successfully to db server");
+		//console.log("Connected successfully to db server");
 		const db = client.db(dbName);
 		const collection = db.collection(userCollection);
 		collection.find({userid: userid, password: pass}).toArray(function(err, docs) {
 			assert.equal(err, null);
+			//console.log(docs);
 			client.close();
 			if(docs.length > 0){
 				activeUsers.push(userid);
@@ -356,7 +348,8 @@ function uploadReport(userid,post_data,callback){
 			}
 			else{
 				myobj = {reportId : reportid,reportName : reportName,userid : userid,animalType : animalType,animalAge : animalAge, diseaseName : "",medicineRecommended : "",
-				mainImagePath : fullImage,infectedImagePath : infectedImage, stoolImagePath : stoolImage,otherSymptoms : otherSymptoms,reportDate : reportDate,status : "PENDING"}
+				mainImagePath : fullImage,infectedImagePath : infectedImage, stoolImagePath : stoolImage,otherSymptoms : otherSymptoms,reportDate : reportDate,status : "PENDING",
+				assignedDoctorId: "",teatedByDcotorId : "",assignTime:"",doctorSuggestion:"",isAssigned:"false",lock:"false"}
 				reports_collection.insertOne(myobj,function(err){
 					if(err) return callback(err);
 					client.close();
@@ -428,6 +421,10 @@ function getAllAssignedReportsOfDoctor(doctorid,res,callback){
 		//console.log("Connected successfully to db server");
 		const db = client.db(dbName);
 		const report_collection = db.collection('report_collection');
+		const doctor_collection = db.collection(doctorCollection);
+		doctor_collection.updateOne({doctorId:doctorid}, {$set: {onlineStatus:"Online"}}, function(err) {
+			if (err) return callback(err);
+		});
 		report_collection.find({assignedDoctorId: doctorid}, { projection: { mainImagePath: 0, infectedImagePath: 0, stoolImagePath: 0 } }).toArray(function(err, docs) {
 			if (err) return callback(err);
 			client.close();
@@ -442,7 +439,7 @@ function unassignAllReportsOfDoctor(doctorid,res,callback){
 		//console.log("Connected successfully to db server");
 		const db = client.db(dbName);
 		const report_collection = db.collection('report_collection');
-		const doctor_collection = db.collection('report_collection');
+		const doctor_collection = db.collection(doctorCollection);
 		var myquery = { assignedDoctorId: doctorid };
 		var newvalues = { $set: {assignedDoctorId: "",isAssigned:"false"} };
 		
@@ -451,7 +448,7 @@ function unassignAllReportsOfDoctor(doctorid,res,callback){
 			x = docs.length;
 			report_collection.updateMany(myquery, newvalues, function(err, result) {
 				if (err) return callback(err);
-				doctor_collection.updateOne({doctorId:doctorid},{"$inc" : {assignedReports: -x}},function(err,result){
+				doctor_collection.updateOne({doctorId:doctorid},{$set: {onlineStatus:""},$inc : {assignedReports: -x}},function(err,result){
 					if (err) return callback(err);
 					client.close();
 					res.send(sucessMessageKey);

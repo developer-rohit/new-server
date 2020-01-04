@@ -9,7 +9,7 @@ var express = require("express"),
 	http = require("http").Server(app).listen(port),
 	upload = require("express-fileupload");
 app.use(upload());
-//console.log("Server Started! At port "+port);
+console.log("Server Started! At port "+port);
 var query_string = require('querystring');
 
 const mongodb = require('mongodb').MongoClient;
@@ -204,7 +204,7 @@ app.post("/uploadreport/:userid", function(req,res){
 
 		// If the POST data is too much then destroy the connection to avoid attack.
 		// 1e6 === 1 * Math.pow(10, 6) === 1 * 1000000 ~~~ 1MB
-		if (req_body.length > 1e8){
+		if (req_body.length > 1e7){
 			req.connection.destroy();
 			res.send("LargePostData");
 		}
@@ -284,11 +284,12 @@ function authenticateUser(userid,pass,res){
 	// Use connect method to connect to the server
 	mongodb.connect(url,{useUnifiedTopology: true , useNewUrlParser: true}, function(err, client) {
 		assert.equal(null, err);
-		////console.log("Connected successfully to db server");
+		//console.log("Connected successfully to db server");
 		const db = client.db(dbName);
 		const collection = db.collection(userCollection);
 		collection.find({userid: userid, password: pass}).toArray(function(err, docs) {
 			assert.equal(err, null);
+			//console.log(docs);
 			client.close();
 			if(docs.length > 0){
 				activeUsers.push(userid);
@@ -356,7 +357,8 @@ function uploadReport(userid,post_data,callback){
 			}
 			else{
 				myobj = {reportId : reportid,reportName : reportName,userid : userid,animalType : animalType,animalAge : animalAge, diseaseName : "",medicineRecommended : "",
-				mainImagePath : fullImage,infectedImagePath : infectedImage, stoolImagePath : stoolImage,otherSymptoms : otherSymptoms,reportDate : reportDate,status : "PENDING"}
+				mainImagePath : fullImage,infectedImagePath : infectedImage, stoolImagePath : stoolImage,otherSymptoms : otherSymptoms,reportDate : reportDate,status : "PENDING",
+				assignedDoctorId: "",teatedByDcotorId : "",assignTime:"",doctorSuggestion:"",isAssigned:"false",lock:"false"}
 				reports_collection.insertOne(myobj,function(err){
 					if(err) return callback(err);
 					client.close();
