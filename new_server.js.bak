@@ -110,22 +110,27 @@ app.get("/doctorlogout/:doctorid", function(req,res){
 	});
 });
 
+app.get("/demoRequests", function(req,res){
+	//console.log("here");
+	fetchDemoRequests(res,function(err){
+		if(err){
+			console.log("here2");
+			res.send(errorMessageKey);
+		}
+	});
+});
+
 //get all repors of a user
 app.get("/getAllReports/:userid",function(req,res){
 	
 	const userid = req.params.userid;
-	if(validateAccess(req)){
-		getAllReportsOfUser(userid,res,function(err){
-			if(err){
-				//console.log("1111")
-				res.send("Error");
-			}
-			
-		});
-	}
-	else{
-		res.send("Logout");
-	}
+	getAllReportsOfUser(userid,res,function(err){
+		if(err){
+			//console.log("1111")
+			res.send("Error");
+		}
+		
+	});
 });
 
 //get all repors of a doctor
@@ -165,19 +170,14 @@ app.get("/unassignReports/:doctorid",function(req,res){
 app.get("/getReportImage/:reportid/:userid",function(req,res){
 	
 	const reportid = req.params.reportid;
-	if(validateAccess(req)){
-		getReportImage(reportid,res,function(err){
-			if(err){
-				//console.log("1111");
-				res.send("Error");
-			}
-			
-		});
-	}
-	else{
-		res.send("Logout");
-	}
 	
+	getReportImage(reportid,res,function(err){
+		if(err){
+			//console.log("1111");
+			res.send("Error");
+		}
+		
+	});
 });
 
 
@@ -216,6 +216,7 @@ app.post("/uploadreport/:userid", function(req,res){
 		var post_data = query_string.parse(req_body);
 		
 		uploadReport(userid,post_data,function(err, client) {
+			//console.log(err);
 			assert.equal(err, null);
 			res.send("success");
 		});
@@ -430,6 +431,10 @@ function getAllAssignedReportsOfDoctor(doctorid,res,callback){
 		//console.log("Connected successfully to db server");
 		const db = client.db(dbName);
 		const report_collection = db.collection('report_collection');
+		const doctor_collection = db.collection(doctorCollection);
+		doctor_collection.updateOne({doctorId:doctorid}, {$set: {onlineStatus:"Online"}}, function(err) {
+			if (err) return callback(err);
+		});
 		report_collection.find({assignedDoctorId: doctorid}, { projection: { mainImagePath: 0, infectedImagePath: 0, stoolImagePath: 0 } }).toArray(function(err, docs) {
 			if (err) return callback(err);
 			client.close();
@@ -444,7 +449,7 @@ function unassignAllReportsOfDoctor(doctorid,res,callback){
 		//console.log("Connected successfully to db server");
 		const db = client.db(dbName);
 		const report_collection = db.collection('report_collection');
-		const doctor_collection = db.collection('report_collection');
+		const doctor_collection = db.collection(doctorCollection);
 		var myquery = { assignedDoctorId: doctorid };
 		var newvalues = { $set: {assignedDoctorId: "",isAssigned:"false"} };
 		
@@ -453,7 +458,7 @@ function unassignAllReportsOfDoctor(doctorid,res,callback){
 			x = docs.length;
 			report_collection.updateMany(myquery, newvalues, function(err, result) {
 				if (err) return callback(err);
-				doctor_collection.updateOne({doctorId:doctorid},{"$inc" : {assignedReports: -x}},function(err,result){
+				doctor_collection.updateOne({doctorId:doctorid},{$set: {onlineStatus:""},$inc : {assignedReports: -x}},function(err,result){
 					if (err) return callback(err);
 					client.close();
 					res.send(sucessMessageKey);
@@ -520,6 +525,22 @@ function doctorLogoutFromServer(res,doctorid,callback){
 			if (err) return callback(err);
 			client.close();
 			res.send(sucessMessageKey);
+		});
+	});
+}
+
+function fetchDemoRequests(res,callback){
+	mongodb.connect(url,{useUnifiedTopology: true , useNewUrlParser: true}, function(err, client) {
+		//console.log("here4"+err);
+		if (err) return callback(err);	
+		//console.log(" Connected successfully to db server ");
+		const db = client.db(dbName);
+		const demo_request_collection = db.collection("demo_requests");
+		demo_request_collection.find({}).toArray(function(err, docs){
+			if (err) return callback(err);
+			//console.log("here3");
+			client.close();
+			res.send(docs);
 		});
 	});
 }

@@ -11,7 +11,7 @@ db = client[dbName]
 
 statusPending = 'PENDING'
 statusOnline = 'Online'
-reportLimit = 5
+reportLimit = 6
 
 reportCollection = db['report_collection']
 doctors = db['doctors']
@@ -21,7 +21,7 @@ doctors = db['doctors']
 def unassignReports(currtime):
 	
 	allAssignReports = reportCollection.find({"status":statusPending,"isAssigned":"true","lock":"false"},{"reportId" :1,"assignTime":1,"assignedDoctorId":1})
-	
+		
 	for x in allAssignReports:
 		assignTime = x["assignTime"]
 		#assignTime = datetime.strptime(assignTime, '%Y-%m-%d %H:%M:%S.%f')
@@ -127,7 +127,7 @@ def assignReport(reportId,doctorId,currtime):
 	doctors.update_one({"doctorId":doctorId},{"$inc" : {"assignedReports": 1}})
 	
 	
-schedule.every(2).minutes.do(distributeReports)
+schedule.every(1).minutes.do(distributeReports)
 
 while True:
     schedule.run_pending()

@@ -110,6 +110,16 @@ app.get("/doctorlogout/:doctorid", function(req,res){
 	});
 });
 
+app.get("/demoRequests", function(req,res){
+	//console.log("here");
+	fetchDemoRequests(res,function(err){
+		if(err){
+			//console.log("here2");
+			res.send(errorMessageKey);
+		}
+	});
+});
+
 //get all repors of a user
 app.get("/getAllReports/:userid",function(req,res){
 	
@@ -515,6 +525,22 @@ function doctorLogoutFromServer(res,doctorid,callback){
 			if (err) return callback(err);
 			client.close();
 			res.send(sucessMessageKey);
+		});
+	});
+}
+
+function fetchDemoRequests(res,callback){
+	mongodb.connect(url,{useUnifiedTopology: true , useNewUrlParser: true}, function(err, client) {
+		//console.log("here4"+err);
+		if (err) return callback(err);	
+		//console.log(" Connected successfully to db server ");
+		const db = client.db(dbName);
+		const demo_request_collection = db.collection("demo_requests");
+		demo_request_collection.find({}).toArray(function(err, docs){
+			if (err) return callback(err);
+			//console.log("here3");
+			client.close();
+			res.send(docs);
 		});
 	});
 }
