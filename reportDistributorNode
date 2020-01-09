@@ -1,0 +1,62 @@
+onst mongodb = require('mongodb').MongoClient;
+const assert = require('assert');
+
+// Connection URL
+const url = 'mongodb+srv://admin:admin@cluster0-jd2q4.mongodb.net/test?retryWrites=true&w=majority'; 
+// Database Name
+const dbName = 'ahb_database';
+const userCollection = 'users';
+const doctorCollection = 'doctors';
+const errorMessageKey = "Error";
+const sucessMessageKey = "Success";
+const reportLimit = 5;
+
+
+
+function getReportImage(reportid,res,callback){
+	mongodb.connect(url,{useUnifiedTopology: true , useNewUrlParser: true}, function(err, client) {
+		if (err) return callback(err);
+		//console.log("Connected successfully to db server");
+		const db = client.db(dbName);
+		const report_collection = db.collection('report_collection');
+		report_collection.find({reportId: reportid}, { projection: { mainImagePath: 1, infectedImagePath: 1, stoolImagePath: 1 } }).toArray(function(err, docs) {
+			if (err) throw err;
+			client.close();
+			res.send(docs); // <-- TODO
+		});
+	});
+}
+
+function unassignReports(){
+}
+
+function distributeReports(){
+	var totalVaccancy = 0;
+	var ratio = 0;
+	var totalReports = 0;
+	var i=0;
+	var doctorDetails = [];
+	
+	let date_ob = new Date();
+	
+	
+	mongodb.connect(url,{useUnifiedTopology: true , useNewUrlParser: true}, function(err, client) {
+		if (err) return callback(err);
+		console.log("Connected successfully to db server");
+		const db = client.db(dbName);
+		const report_collection = db.collection('report_collection');
+		const doctor_collection = db.collection(doctorCollection);
+		
+		report_collection.find({status: statusPending,isAssigned: "false"}, { projection: {reportId : 1} }).toArray(function(err, docs) {
+			if (err) throw err;
+			doctor_collection.find({assignedReports: {$lt: reportLimit},onlineStatus: statusOnline}, { projection: {doctorId:1,assignedReports:1} }).toArray(function(err, docs) {
+				if (err) throw err;
+				
+				
+				
+				client.close();
+			});
+		});
+	});
+	
+}

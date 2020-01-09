@@ -4,29 +4,24 @@ from pymongo import MongoClient
 import math
 from datetime import datetime
 
-client = MongoClient('mongodb://admin:admin@cluster0-shard-00-00-jd2q4.mongodb.net:27017,cluster0-shard-00-01-jd2q4.mongodb.net:27017,cluster0-shard-00-02-jd2q4.mongodb.net:27017/test?ssl=true&replicaSet=Cluster0-shard-0&authSource=admin&retryWrites=true&w=majority')
-dbName = "ahb_database"
-db = client[dbName]
-
+url = 'mongodb://admin:admin@cluster0-shard-00-00-jd2q4.mongodb.net:27017,cluster0-shard-00-01-jd2q4.mongodb.net:27017,cluster0-shard-00-02-jd2q4.mongodb.net:27017/test?ssl=true&replicaSet=Cluster0-shard-0&authSource=admin&retryWrites=true&w=majority'
 
 statusPending = 'PENDING'
 statusOnline = 'Online'
-reportLimit = 6
-
-reportCollection = db['report_collection']
-doctors = db['doctors']
+reportLimit = 5
 
 
 
-def unassignReports(currtime):
+def unassignReports(currtime,reportCollection,doctors):
 	
 	allAssignReports = reportCollection.find({"status":statusPending,"isAssigned":"true","lock":"false"},{"reportId" :1,"assignTime":1,"assignedDoctorId":1})
-		
+	
 	for x in allAssignReports:
 		assignTime = x["assignTime"]
 		#assignTime = datetime.strptime(assignTime, '%Y-%m-%d %H:%M:%S.%f')
 		diffinmin = round(((currtime-assignTime).seconds)/60)
-		if(diffinmin > 30):
+		if(diffinmin > 1.5):
+			print("Unassigned A Report")
 			doctorId = x["assignedDoctorId"]
 			reportCollection.update_one({"reportId" : x["reportId"]},{ "$set": { "assignedDoctorId" : "" ,"assignTime" : "","isAssigned":"false"}})
 			doctors.update_one({"doctorId":doctorId},{"$inc" : {"assignedReports": -1}})
@@ -40,8 +35,15 @@ def distributeReports():
 	i=0
 	doctorDetails = []
 	
+	client = MongoClient(url)
+	dbName = "ahb_database"
+	db = client[dbName]
+	reportCollection = db['report_collection']
+	doctors = db['doctors']
+
+	
 	currtime = datetime.now()
-	unassignReports(currtime)
+	unassignReports(currtime,reportCollection,doctors)
 	
 	availableDoctors = doctors.find({"assignedReports": {"$lt": reportLimit},"onlineStatus": statusOnline},{"doctorId":1,"assignedReports":1})
 	availableReports = reportCollection.find({"status": statusPending,"isAssigned": "false"},{"reportId":1})
@@ -62,14 +64,14 @@ def distributeReports():
 	
 	if(ratio != 0):
 		if(totalReports >= totalVaccancy):
-			assignOneToEach(availableDoctors,availableReports,totalReports,doctorDetails,currtime)
+			assignOneToEach(availableDoctors,availableReports,totalReports,doctorDetails,currtime,reportCollection,doctors)
 		else:
-			assignAccordingToProbablity(availableDoctors,availableReports,totalReports,doctorDetails,ratio,currtime)
+			assignAccordingToProbablity(availableDoctors,availableReports,totalReports,doctorDetails,ratio,currtime,reportCollection,doctors)
 	client.close()
 
 
 # used when total reports is greater than or equal to total vaccancy
-def assignOneToEach(availableDoctors,availableReports,totalReports,doctorDetails,currtime):
+def assignOneToEach(availableDoctors,availableReports,totalReports,doctorDetails,currtime,reportCollection,doctors):
 	i=0
 	j=0
 	doctorCount = availableDoctors.count()
@@ -83,7 +85,7 @@ def assignOneToEach(availableDoctors,availableReports,totalReports,doctorDetails
 				break
 				
 			if doctorDetails[j][1] > 0:
-				assignReport(report["reportId"],doctorDetails[j][0],currtime)
+				assignReport(report["reportId"],doctorDetails[j][0],currtime,reportCollection,doctors)
 				breakwhilelopp = True
 				doctorDetails[j][1] = doctorDetails[j][1]-1
 			else:
@@ -93,7 +95,7 @@ def assignOneToEach(availableDoctors,availableReports,totalReports,doctorDetails
 		
 # used when total reports is less than total vaccancy
 # 
-def assignAccordingToProbablity(availableDoctors,availableReports,totalReports,doctorDetails,ratio,currtime):
+def assignAccordingToProbablity(availableDoctors,availableReports,totalReports,doctorDetails,ratio,currtime,reportCollection,doctors):
 	i=0
 	doctorCount = availableDoctors.count()
 	
@@ -113,7 +115,7 @@ def assignAccordingToProbablity(availableDoctors,availableReports,totalReports,d
 				break
 				
 			if doctorDetails[j][1] > 0:
-				assignReport(report["reportId"],doctorDetails[j][0],currtime)
+				assignReport(report["reportId"],doctorDetails[j][0],currtime,reportCollection,doctors)
 				breakwhilelopp = True
 				doctorDetails[j][1] = doctorDetails[j][1]-1
 			else:
@@ -122,13 +124,15 @@ def assignAccordingToProbablity(availableDoctors,availableReports,totalReports,d
 				break
 
 # Assigns doctorId to given reportId
-def assignReport(reportId,doctorId,currtime):
+def assignReport(reportId,doctorId,currtime,reportCollection,doctors):
 	reportCollection.update_one({"reportId" : reportId},{ "$set": { "assignedDoctorId" : doctorId ,"assignTime":currtime,"isAssigned":"true"}})
 	doctors.update_one({"doctorId":doctorId},{"$inc" : {"assignedReports": 1}})
+	print("Assigned A Report")
 	
-	
-schedule.every(2).minutes.do(distributeReports)
+
+distributeReports()
+schedule.every(1).minutes.do(distributeReports)
 
 while True:
-    schedule.run_pending()
-    time.sleep(1)
+	schedule.run_pending()
+	time.sleep(1)
