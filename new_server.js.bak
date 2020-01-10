@@ -114,7 +114,7 @@ app.get("/demoRequests", function(req,res){
 	//console.log("here");
 	fetchDemoRequests(res,function(err){
 		if(err){
-			console.log("here2");
+			//console.log("here2");
 			res.send(errorMessageKey);
 		}
 	});
