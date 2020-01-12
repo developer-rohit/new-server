@@ -1,0 +1,104 @@
+body{
+	  background-image: url("/images/gallerybk.JPG");
+  height: 100%;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+
+}
+.container{
+	margin-top: 10%;
+} 
+#outer {
+	width: 100%;
+	height: 100%;
+	min-width: 800px;
+	min-height: 400px;
+	position: relative;
+}
+#inner {
+	width: 800px;
+	height: 300px;
+	margin: -150px 0 0 -400px;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+}
+#inner:after {
+	content: url("shadow.png");
+	opacity: 0.5;
+	position: absolute;
+	bottom: -50px;
+	left: 70px;
+}
+#carousel-fc img{
+
+	border: 2px solid white;
+	border-radius: 50%;
+}
+.carousel {
+	width: 400px;
+	height: 300px;
+	overflow: hidden;
+	float: left;
+}
+.carousel img {
+	display: block;
+	float: left;
+}
+#carousel-txt {
+	height: 30px;
+	position: absolute;
+	top: 135px;
+	right: 0;
+	z-index: 2;
+}
+#carousel-txt h3 {
+	text-shadow: 0 2px 5px rgb( 150, 50, 50 );
+	color: #fff;
+	font-size: 30px;
+	font-weight: bold;
+	line-height: 30px;
+	width: 400px;
+	height: 30px;
+	padding-left: 30px;
+	margin: 0;
+	float: left;
+}
+#overlay {
+	background: rgba( 150, 50, 50, 0.5 );
+	width: 400px;
+	height: 300px;
+	position: absolute;
+	top: 0;
+	right: 0;
+}
+#prev,
+#next {
+	background: rgb( 150, 50, 50 );
+	color: #fff;
+	font-size: 30px;
+	font-weight: bold;
+	line-height: 37px;
+	text-align: center;
+	text-decoration: none;
+	display: block;
+	width: 40px;
+	height: 40px;
+	margin-top: -20px;
+	position: absolute;
+	top: 50%;
+	z-index: 4;
+}
+#prev {
+	right: 50px;
+}
+#next {
+	right: 0;
+}
+#prev:hover {
+	text-indent: -5px;				
+}
+#next:hover {
+	text-indent: 5px;
+}

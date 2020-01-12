@@ -1,0 +1,99 @@
+body, html {
+  height: 100%;
+}
+
+body {
+  background-image: url("../images/bck2.png");
+  height: 100%;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}/*
+h2{
+	width :45%;
+	margin-left: auto;
+	margin-right: auto;
+}*/
+.row {
+  display: flex;
+}
+
+.column {
+  flex: 45%;
+  margin-left: 5%;
+}
+.textarea{
+	margin-top: 10%;
+	text-align: center;
+	background-color: #ffffff7d;
+	padding: 8%;
+	font-size: 16px;
+	margin-top: 10%;	
+}
+.caro{
+	margin-top: 10%;
+}
+img{
+	border: 2px solid white;
+	width : 400px;
+	height: 250px;
+}
+
+ #stage {
+    margin: 1em auto;
+    width: 382px;
+    height: 292px;
+  }
+
+  #stage a {
+    position: absolute;
+  }
+  #stage a img {
+    padding: 10px;
+    border: 1px solid #ccc;
+    background: #fff;
+  }
+
+  #stage a:nth-of-type(1) {
+    animation-name: fader;
+    animation-delay: 4s;
+    animation-duration: 1s;
+    z-index: 20;
+  }
+  #stage a:nth-of-type(2) {
+    z-index: 10;
+  }
+  #stage a:nth-of-type(n+3) {
+    display: none;
+  }
+
+  @keyframes fader {
+    from { opacity: 1.0; }
+    to   { opacity: 0.0; }
+  }
+
+  @media only screen and (max-width: 600px) {
+
+ .row {
+  display: inline-block;
+  flex-direction: column;
+}
+p{
+  font-size: 12px;
+  color: black;
+}
+.column{
+  margin:0px;
+  padding: 0px;
+}
+
+.caro{
+  margin-top: 0px;
+}
+
+  body {
+    background-image: url("../images/bck2.png");
+    background-repeat: repeat;
+    background-position: right;
+}
+}

@@ -1,0 +1,14 @@
+body{
+background: url("images/wee.jpg");
+background-repeat: no-repeat;
+}
+video{
+
+	height: 60vh;  
+    width: 60vw;
+}
+p{
+	font-size: 30px;
+	color: white;
+	text-align: center; 
+}
