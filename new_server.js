@@ -344,6 +344,7 @@ function uploadReport(userid,post_data,callback){
 	var animalAge = post_data["animalAge"];
 	var otherSymptoms = post_data["otherSymptoms"];
 	var reportName = post_data["reportName"];
+	var reportType = post_data["reportType"];
 	var reportDate=dateFormat(new Date(), "mm-dd-yyyy");
 	
 	mongodb.connect(url,{useUnifiedTopology: true , useNewUrlParser: true}, function(err, client) {
@@ -358,7 +359,7 @@ function uploadReport(userid,post_data,callback){
 				client.close();
 			}
 			else{
-				myobj = {reportId : reportid,reportName : reportName,userid : userid,animalType : animalType,animalAge : animalAge, diseaseName : "",medicineRecommended : "",
+				myobj = {reportId : reportid,reportName : reportName,reportType : reportType,userid : userid,animalType : animalType,animalAge : animalAge, diseaseName : "",medicineRecommended : "",
 				mainImagePath : fullImage,infectedImagePath : infectedImage, stoolImagePath : stoolImage,otherSymptoms : otherSymptoms,reportDate : reportDate,status : "PENDING",
 				assignedDoctorId: "TestDoctor",teatedByDcotorId : "",assignTime:"",doctorSuggestion:"",isAssigned:"true",lock:"false"}
 				reports_collection.insertOne(myobj,function(err){

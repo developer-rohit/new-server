@@ -345,6 +345,7 @@ function uploadReport(userid,post_data,callback){
 	var otherSymptoms = post_data["otherSymptoms"];
 	var reportName = post_data["reportName"];
 	var reportDate=dateFormat(new Date(), "mm-dd-yyyy");
+	
 	mongodb.connect(url,{useUnifiedTopology: true , useNewUrlParser: true}, function(err, client) {
 		if(err) return callback(err);
 		//console.log("Connected successfully to db server");
@@ -359,7 +360,7 @@ function uploadReport(userid,post_data,callback){
 			else{
 				myobj = {reportId : reportid,reportName : reportName,userid : userid,animalType : animalType,animalAge : animalAge, diseaseName : "",medicineRecommended : "",
 				mainImagePath : fullImage,infectedImagePath : infectedImage, stoolImagePath : stoolImage,otherSymptoms : otherSymptoms,reportDate : reportDate,status : "PENDING",
-				assignedDoctorId: "",teatedByDcotorId : "",assignTime:"",doctorSuggestion:"",isAssigned:"false",lock:"false"}
+				assignedDoctorId: "TestDoctor",teatedByDcotorId : "",assignTime:"",doctorSuggestion:"",isAssigned:"true",lock:"false"}
 				reports_collection.insertOne(myobj,function(err){
 					if(err) return callback(err);
 					client.close();
