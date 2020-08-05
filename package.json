@@ -5,7 +5,7 @@
   "main": "new_server.js",
   "dependencies": {
     "dateformat": "^3.0.3",
-    "express-fileupload": "^1.1.6-alpha.6",
+    "express-fileupload": "^1.1.9",
     "express": "^4.17.1",
     "mongodb": "^3.3.3"
   },
